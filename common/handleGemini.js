@@ -1,5 +1,5 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-const { addUserMessage, addModelResponse, getConversation, trimConversation } = require("./memory");
+const { addUserMessage, addModelResponse, getConversation, trimConversation, initChat } = require("./memory");
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API);
 const model = genAI.getGenerativeModel({
@@ -8,6 +8,7 @@ const model = genAI.getGenerativeModel({
 });
 
 async function handleGemini(chatId, userMessage, sendMessage) {
+    initChat(chatId);
     addUserMessage(chatId, userMessage);
     trimConversation(chatId, 20);
     const chatSession = model.startChat({
