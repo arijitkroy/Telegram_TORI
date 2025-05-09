@@ -29,7 +29,7 @@ app.post(`/webhook/${TOKEN}`, async (req, res) => {
 
 app.get("/", async (req, res) => {
     try {
-        const webhookUrl = `https://${process.env.RENDER_EXTERNAL_URL}/webhook/${TOKEN}`;
+        const webhookUrl = `${process.env.RENDER_EXTERNAL_URL}/webhook/${TOKEN}`;
         console.log("Setting webhook to:", webhookUrl);
 
         const response = await axios.get(`${API_URL}/setWebhook`, {
