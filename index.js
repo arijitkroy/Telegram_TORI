@@ -5,7 +5,7 @@ const getUpdates = require("./app");
 
 app.get('/', (req, res) => {
     res.send("Bot is running!");
-    getUpdates();
 });
 
+getUpdates();
 app.listen(PORT);
