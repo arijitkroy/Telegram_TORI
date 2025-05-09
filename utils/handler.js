@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const askGemini = require("../common/askGemini");
+const handleGemini = require("../common/handleGemini");
 
 const commands = {};
 
@@ -19,7 +19,8 @@ module.exports = async function handler(chatId, text, sendMessage) {
     } else if (trimmedText.startsWith('/')) {
         await sendMessage(chatId, '❓ Unknown command. Use /help.');
     } else {
-        const reply = await askGemini(text);
-        await sendMessage(chatId, reply);
+        await handleGemini(chatId, text, async (chatId, reply) => {
+            await sendMessage(chatId, reply);
+        });
     }
 };
