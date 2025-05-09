@@ -9,11 +9,30 @@ const model = genAI.getGenerativeModel({
 
 async function handleGemini(chatId, userMessage, sendMessage) {
     initChat(chatId);
+
+    if (typeof userMessage !== "string") {
+        console.warn("Ignored non-string message from user:", userMessage);
+        await sendMessage(chatId, "⚠️ Unsupported message format.");
+        return;
+    }
+
     addUserMessage(chatId, userMessage);
     trimConversation(chatId, 20);
-    const chatSession = model.startChat({
-        history: getConversation(chatId),
-    });
+
+    const rawHistory = getConversation(chatId);
+    const history = rawHistory.filter(
+        (entry) =>
+            typeof entry === "object" &&
+            (entry.role === "user" || entry.role === "model") &&
+            Array.isArray(entry.parts) &&
+            entry.parts.every((p) => typeof p === "string")
+    );
+
+    if (history.length !== rawHistory.length) {
+        console.warn("Corrupted history filtered for chatId:", chatId);
+    }
+
+    const chatSession = model.startChat({ history });
 
     try {
         const result = await chatSession.sendMessage(userMessage);
