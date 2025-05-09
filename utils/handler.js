@@ -19,8 +19,6 @@ module.exports = async function handler(chatId, text, sendMessage) {
     } else if (trimmedText.startsWith('/')) {
         await sendMessage(chatId, '❓ Unknown command. Use /help.');
     } else {
-        await handleGemini(chatId, text, async (chatId, reply) => {
-            await sendMessage(chatId, reply);
-        });
+        await handleGemini(chatId, text, sendMessage);
     }
 };
