@@ -30,12 +30,16 @@ app.post(`/webhook/${TOKEN}`, async (req, res) => {
 app.get("/", async (req, res) => {
     try {
         const webhookUrl = `https://${process.env.RENDER_EXTERNAL_URL}/webhook/${TOKEN}`;
-        await axios.get(`${API_URL}/setWebhook`, {
+        console.log("Setting webhook to:", webhookUrl);
+
+        const response = await axios.get(`${API_URL}/setWebhook`, {
             params: { url: webhookUrl }
         });
-        res.send("Webhook set. Bot is ready.");
+
+        res.send("Webhook set successfully: " + JSON.stringify(response.data));
     } catch (err) {
-        res.status(500).send("Error setting webhook: " + err.message);
+        console.error("Error setting webhook:", err.response?.data || err.message);
+        res.status(500).send("Error setting webhook: " + (err.response?.data?.description || err.message));
     }
 });
 
