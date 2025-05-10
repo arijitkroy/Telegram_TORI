@@ -20,8 +20,7 @@ app.post(`/webhook/${TOKEN}`, async (req, res) => {
         try {
             await axios.post(`${API_URL}/sendMessage`, {
                 chat_id: chatId,
-                text,
-                parse_mode: "MarkdownV2"
+                text
             });
         } catch (err) {
             console.error("Telegram sendMessage failed:", err.response?.data || err.message);
