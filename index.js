@@ -16,7 +16,7 @@ app.post(`/webhook/${TOKEN}`, async (req, res) => {
     const chatId = message.chat.id;
     const text = message.text;
 
-    function escapeMarkdownV2(text) {
+    function escapeMarkdown(text) {
         return text.replace(/([_*[\]()~`>#+=|{}\\])/g, '\\$1');
     }
 
@@ -24,8 +24,8 @@ app.post(`/webhook/${TOKEN}`, async (req, res) => {
         try {
             await axios.post(`${API_URL}/sendMessage`, {
                 chat_id: chatId,
-                text: escapeMarkdownV2(text),
-                parse_mode: "MarkdownV2",
+                text: escapeMarkdown(text),
+                parse_mode: "Markdown",
             });
         } catch (err) {
             console.error("Telegram sendMessage failed:", err.response?.data || err.message);
