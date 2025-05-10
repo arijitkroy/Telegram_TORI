@@ -17,10 +17,15 @@ app.post(`/webhook/${TOKEN}`, async (req, res) => {
     const text = message.text;
 
     const sendMessage = async (chatId, text) => {
-        await axios.post(`${API_URL}/sendMessage`, {
-            chat_id: chatId,
-            text,
-        });
+        try {
+            await axios.post(`${API_URL}/sendMessage`, {
+                chat_id: chatId,
+                text,
+                parse_mode: "MarkdownV2"
+            });
+        } catch (err) {
+            console.error("Telegram sendMessage failed:", err.response?.data || err.message);
+        }
     };
 
     await handler(chatId, text, sendMessage);
@@ -29,7 +34,8 @@ app.post(`/webhook/${TOKEN}`, async (req, res) => {
 
 app.get("/", async (req, res) => {
     try {
-        const webhookUrl = `${process.env.RENDER_EXTERNAL_URL}/webhook/${TOKEN}`;
+        // const webhookUrl = `${process.env.RENDER_EXTERNAL_URL}/webhook/${TOKEN}`;
+        const webhookUrl = `${req.protocol}://${req.get("host")}/webhook/${TOKEN}`;
         console.log("Setting webhook to:", webhookUrl);
 
         const response = await axios.get(`${API_URL}/setWebhook`, {

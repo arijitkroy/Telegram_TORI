@@ -10,15 +10,20 @@ fs.readdirSync(path.join(__dirname, '..', 'commands')).forEach(file => {
 });
 
 module.exports = async function handler(chatId, text, sendMessage) {
-    const trimmedText = text.trim();
-    const [command] = trimmedText.split(' ');
-    const commandHandler = commands[command];
+    try {
+        const trimmedText = text.trim();
+        const [command] = trimmedText.split(' ');
+        const commandHandler = commands[command];
 
-    if (commandHandler) {
-        await commandHandler(chatId, text, sendMessage);
-    } else if (trimmedText.startsWith('/')) {
-        await sendMessage(chatId, '❓ Unknown command. Use /help.');
-    } else {
-        await handleGemini(chatId, text, sendMessage);
+        if (commandHandler) {
+            await commandHandler(chatId, text, sendMessage);
+        } else if (trimmedText.startsWith('/')) {
+            await sendMessage(chatId, '❓ Unknown command. Use /help.');
+        } else {
+            await handleGemini(chatId, text, sendMessage);
+        }
+    } catch (err) {
+        console.error("Handler failed:", err.message);
+        await sendMessage(chatId, "⚠️ An internal error occurred.");
     }
 };
