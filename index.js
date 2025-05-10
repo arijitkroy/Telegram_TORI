@@ -17,7 +17,7 @@ app.post(`/webhook/${TOKEN}`, async (req, res) => {
     const text = message.text;
 
     function escapeMarkdownV2(text) {
-        return text.replace(/([_*[\]()~`>#+=|{}.!\\-])/g, '\\$1');
+        return text.replace(/([_*[\]()~`>#+=|{}\\])/g, '\\$1');
     }
 
     const sendMessage = async (chatId, text) => {
