@@ -19,18 +19,18 @@ async function handleGemini(chatId, userMessage, sendMessage) {
     addUserMessage(chatId, userMessage);
     trimConversation(chatId, 20);
 
-    const rawHistory = getConversation(chatId);
-    const history = rawHistory.filter(
-        (entry) =>
-            typeof entry === "object" &&
-            (entry.role === "user" || entry.role === "model") &&
-            Array.isArray(entry.parts) &&
-            entry.parts.every((p) => typeof p === "string")
-    );
+    const history = getConversation(chatId);
+    // const history = rawHistory.filter(
+    //     (entry) =>
+    //         typeof entry === "object" &&
+    //         (entry.role === "user" || entry.role === "model") &&
+    //         Array.isArray(entry.parts) &&
+    //         entry.parts.every((p) => typeof p === "string")
+    // );
 
-    if (history.length !== rawHistory.length) {
-        console.warn("Corrupted history filtered for chatId:", chatId);
-    }
+    // if (history.length !== rawHistory.length) {
+    //     console.warn("Corrupted history filtered for chatId:", chatId);
+    // }
 
     const chatSession = model.startChat({ history });
 
