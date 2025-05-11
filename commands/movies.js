@@ -31,7 +31,7 @@ module.exports = async function movies(chatId, userMessage, sendMessage) {
                 `<b>Rating:</b> ${entries.rating}\n` +
                 `<b>Runtime:</b> ${entries.runtime}\n\n` +
                 `<b>Downloads:</b>\n` +
-                `${entries.torrents.map((tor, id) => `${id+1}. <a href="${tor.torrent}">${tor.quality}</a> [${tor.type.trim()}] - ${tor.size}\n`).join("\n")}` +
+                `${entries.torrents.map((tor, id) => `${id+1}. <a href="${tor.torrent}">${tor.quality}</a> [${tor.type.trim()}] - ${tor.size}`).join("\n")}\n` +
                 `<a href="${entries.url}">View more details</a>`;
 
             const imageResponse = await axios.get(imageUrl, { responseType: 'stream' });
