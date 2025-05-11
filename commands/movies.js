@@ -55,4 +55,4 @@ module.exports = async function movies(chatId, userMessage, sendMessage) {
     }
 }
 
-module.exports.syntax = "/movies [movie_name] - Use YTS Torrent API to get the movies.";
+module.exports.syntax = "/movies [movie name] - Use YTS Torrent API to get the movies.";
