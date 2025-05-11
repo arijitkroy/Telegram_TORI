@@ -2,7 +2,6 @@ const axios = require('axios');
 const FormData = require('form-data');
 const { API_URL } = require("../config");
 const path = require('path');
-const fs = require('fs');
 const { default: axiosRetry } = require('axios-retry');
 
 axiosRetry(axios, { retries: 3 });
