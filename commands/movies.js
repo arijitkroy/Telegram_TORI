@@ -5,6 +5,10 @@ const { API_URL } = require("../config");
 
 module.exports = async function movies(chatId, userMessage, sendMessage) {
     const args = userMessage.replace('/movies', '').trim();
+    if (!args) {
+        sendMessage("⚠️ Search query cannot be empty!");
+        return;
+    }
     const url = `https://torrent-api-py-nx0x.onrender.com/api/v1/search?site=yts&query=${encodeURIComponent(args)}&limit=4`;
     await sendMessage('🔎 Looking up your movie!');
     try {
@@ -36,7 +40,7 @@ module.exports = async function movies(chatId, userMessage, sendMessage) {
                 headers: form.getHeaders()
             });
         });
-    } catch (error) {
+    } catch (err) {
         console.error("❌ Error in moviesCommand:", err.response?.data || err.message);
         sendMessage(chatId, "❌ Couldn't fetch the movie. It might be an unsupported format or a Telegram error.");
     }
