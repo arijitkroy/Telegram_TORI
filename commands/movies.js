@@ -30,8 +30,8 @@ module.exports = async function movies(chatId, userMessage, sendMessage) {
                 `<b>Date:</b> ${entries.date}\n` +
                 `<b>Rating:</b> ${entries.rating}\n` +
                 `<b>Runtime:</b> ${entries.runtime}\n\n` +
-                `<b>Downloads:</b>\n` +
-                `${entries.torrents.map((tor, id) => `${id+1}. <a href="${tor.torrent}">${tor.quality}</a> [${tor.type.trim()}] - ${tor.size}`).join("\n")}\n\n` +
+                // `<b>Downloads:</b>\n` +
+                // `${entries.torrents.map((tor, id) => `${id+1}. <a href="${tor.torrent}">${tor.quality}</a> [${tor.type.trim()}] - ${tor.size}`).join("\n")}\n\n` +
                 `<a href="${entries.url}">View more details</a>`;
 
             const imageResponse = await axios.get(imageUrl, { responseType: 'stream' });
@@ -48,6 +48,21 @@ module.exports = async function movies(chatId, userMessage, sendMessage) {
             await axios.post(`${API_URL}/sendPhoto`, form, {
                 headers: form.getHeaders()
             });
+
+            const buttons = entries.torrents.map((tor, id) => [{
+                text: `${tor.quality} (${tor.size})`,
+                callback_data: `download|${tor.torrent}|${tor.quality}|${entries.name}`
+            }]);
+
+            await axios.post(`${API_URL}/sendMessage`, {
+                chat_id: chatId,
+                text: `📥 Choose a torrent to download for: <b>${entries.name}</b>`,
+                parse_mode: 'HTML',
+                reply_markup: {
+                    inline_keyboard: buttons
+                }
+            });
+
         });
     } catch (err) {
         console.error("❌ Error in moviesCommand:", err.response?.data || err.message);

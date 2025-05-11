@@ -9,8 +9,18 @@ fs.readdirSync(path.join(__dirname, '..', 'commands')).forEach(file => {
     commands[`/${name}`] = require(path.join(__dirname, '..', 'commands', file));
 });
 
-module.exports = async function handler(chatId, text, sendMessage) {
+module.exports = async function handler(chatId, text, sendMessage, callbackData = null) {
     try {
+        if (callbackData) {
+            for (const [_, commandHandler] of Object.entries(commands)) {
+                if (commandHandler.callback) {
+                    await commandHandler(chatId, "", sendMessage, callbackData);
+                    return;
+                }
+            }
+            await sendMessage(chatId, "⚠️ Action not supported.");
+            return;
+        }
         const trimmedText = text.trim();
         const [command] = trimmedText.split(' ');
         const commandHandler = commands[command];

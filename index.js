@@ -2,6 +2,7 @@ const express = require("express");
 const axios = require("axios");
 const { TOKEN, API_URL } = require("./config");
 const handler = require("./utils/handler");
+const callbackHandler = require("./utils/callbackHandler");
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -10,24 +11,32 @@ app.use(express.json());
 
 app.post(`/webhook/${TOKEN}`, async (req, res) => {
     const update = req.body;
-    const message = update.message;
-    if (!message || !message.text) return res.sendStatus(200);
 
-    const chatId = message.chat.id;
-    const text = message.text;
+    if (update.message && update.message.text) {
+        const chatId = update.message.chat.id;
+        const text = update.message.text;
 
-    const sendMessage = async (chatId, text) => {
-        try {
-            await axios.post(`${API_URL}/sendMessage`, {
-                chat_id: chatId,
-                text,
-            });
-        } catch (err) {
-            console.error("Telegram sendMessage failed:", err.response?.data || err.message);
-        }
-    };
+        const sendMessage = async (chatId, text) => {
+            try {
+                await axios.post(`${API_URL}/sendMessage`, {
+                    chat_id: chatId,
+                    text,
+                });
+            } catch (err) {
+                console.error("Telegram sendMessage failed:", err.response?.data || err.message);
+            }
+        };
 
-    await handler(chatId, text, sendMessage);
+        await handler(chatId, text, sendMessage);
+    }
+
+    if (update.callback_query) {
+        const chatId = update.callback_query.message.chat.id;
+        const data = update.callback_query.data;
+        await handler(chatId, null, sendMessage, data);
+        return res.sendStatus(200);
+    }
+
     res.sendStatus(200);
 });
 
