@@ -3,11 +3,6 @@ const FormData = require('form-data');
 const path = require("path");
 const { API_URL } = require("../config");
 
-function escapeMarkdown(text) {
-    return text
-        .replace(/[_*[\]()~`>#+\-=|{}.!]/g, '\\$&');
-}
-
 module.exports = async function movies(chatId, userMessage, sendMessage) {
     const args = userMessage.replace('/movies', '').trim();
     if (!args) {
@@ -30,7 +25,16 @@ module.exports = async function movies(chatId, userMessage, sendMessage) {
         console.log(data.data);
         data.forEach(async (entries) => {
             let imageUrl = entries.poster;
-            let caption = `Name: ${escapeMarkdown(entries.name)}\nGenre: ${entries.genre}\nDate: ${escapeMarkdown(entries.date)}\nRating: ${escapeMarkdown(entries.rating)}\nRuntime: ${escapeMarkdown(entries.runtime)}\nDownloads:\n1. [${entries.torrents[0].quality}](${entries.torrents[0].torrent}) - ${escapeMarkdown(entries.torrents[0].size)}\n2. [${entries.torrents[1].quality}](${entries.torrents[1].torrent}) - ${escapeMarkdown(entries.torrents[1].size)}\n\nView more details [here](${entries.url})`;
+            let caption = 
+                `<b>Name:</b> ${entries.name}\n` +
+                `<b>Genre:</b> ${entries.genre}\n` +
+                `<b>Date:</b> ${entries.date}\n` +
+                `<b>Rating:</b> ${entries.rating}\n` +
+                `<b>Runtime:</b> ${entries.runtime}\n\n` +
+                `<b>Downloads:</b>\n` +
+                `1. <a href="${entries.torrents[0].torrent}">${entries.torrents[0].quality}</a> - ${entries.torrents[0].size}\n` +
+                `2. <a href="${entries.torrents[1].torrent}">${entries.torrents[1].quality}</a> - ${entries.torrents[1].size}\n\n` +
+                `<a href="${entries.url}">View more details</a>`;
 
             const imageResponse = await axios.get(imageUrl, { responseType: 'stream' });
             const fileName = path.basename(imageUrl.split('?')[0]);
@@ -38,7 +42,7 @@ module.exports = async function movies(chatId, userMessage, sendMessage) {
             const form = new FormData();
             form.append('chat_id', chatId);
             form.append('caption', caption);
-            form.append('parse_mode', 'MarkdownV2');
+            form.append('parse_mode', 'HTML');
             form.append('photo', imageResponse.data, {
                 filename: fileName
             });
