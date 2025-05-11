@@ -13,6 +13,7 @@ module.exports = async function helpCommand(chatId, args, sendMessage) {
         helpText += `• ${syntax}\n`;
     }
 
+    helpText += '\nNote: You can chatting normally without using /\nHave fun ;)\n';
     sendMessage(chatId, helpText);
 };
 
