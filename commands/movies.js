@@ -22,7 +22,7 @@ module.exports = async function movies(chatId, userMessage, sendMessage) {
             sendMessage("⚠️ Cannot find the movie!");
             return;
         }
-        data.map(async (entries, id) => {
+        data.data.forEach(async (entries) => {
             let imageUrl = entries.poster;
             let caption = `Name: ${entries.name}\nGenre: ${entries.genre}\nDate: ${entries.date}\nRating: ${entries.rating}\nRuntime: ${entries.runtime}\nDownloads:\n1. [${entries.torrents[0].quality}](${entries.torrents[0].torrent}) - ${entries.torrent[0].size}\n2. [${entries.torrents[1].quality}](${entries.torrents[1].torrent}) - ${entries.torrent[1].size}\n\nView more details [here](${entries.url})`;
 
