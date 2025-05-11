@@ -35,7 +35,7 @@ module.exports = async function movies(chatId, userMessage, sendMessage, callbac
 
             const buttons = torrents.map((tor, i) => {
                 return [{
-                    text: `${tor.quality} - ${tor.size}`,
+                    text: `${tor.quality} [${tor.type}] - ${tor.size}`,
                     callback_data: `torrent_${index}_${i}`
                 }];
             });
@@ -124,7 +124,7 @@ module.exports = async function movies(chatId, userMessage, sendMessage, callbac
                 form.append('caption', caption);
                 form.append('parse_mode', 'HTML');
                 form.append('photo', imageResponse.data, { filename: fileName });
-                form.append('reply_markup', buttons);
+                form.append('reply_markup', JSON.stringify(buttons));
 
                 await axios.post(`${API_URL}/sendPhoto`, form, {
                     headers: form.getHeaders()
