@@ -9,7 +9,7 @@ module.exports = async function movies(chatId, userMessage, sendMessage) {
         sendMessage(chatId, "⚠️ Search query cannot be empty!");
         return;
     }
-    const url = `https://torrent-api-py-nx0x.onrender.com/api/v1/search?site=yts&query=${encodeURIComponent(args)}&limit=4`;
+    const url = `${process.env.API_HOST}/api/v1/search?site=yts&query=${encodeURIComponent(args)}&limit=4`;
     sendMessage(chatId, "🔎 Looking up your movie!");
     try {
         const data = await axios.get(url, {
