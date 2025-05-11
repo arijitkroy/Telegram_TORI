@@ -101,6 +101,7 @@ module.exports = async function movies(chatId, userMessage, sendMessage, callbac
         movieCache.set(chatId, results);
 
         results.forEach(async (entry, index) => {
+            const imageUrl = entry.poster;
             const caption =
                 `<b>Name:</b> ${entry.name}\n` +
                 `<b>Genre:</b> ${entry.genre}\n` +
@@ -114,13 +115,29 @@ module.exports = async function movies(chatId, userMessage, sendMessage, callbac
                 ]
             };
 
-            await axios.post(`${API_URL}/sendPhoto`, {
-                chat_id: chatId,
-                caption,
-                parse_mode: 'HTML',
-                photo: entry.poster,
-                reply_markup: buttons
-            });
+            try {
+                const imageResponse = await axios.get(imageUrl, { responseType: 'stream' });
+                const fileName = path.basename(imageUrl.split('?')[0]);
+
+                const form = new FormData();
+                form.append('chat_id', chatId);
+                form.append('caption', caption);
+                form.append('parse_mode', 'HTML');
+                form.append('photo', imageResponse.data, { filename: fileName });
+                form.append('reply_markup', buttons);
+
+                await axios.post(`${API_URL}/sendPhoto`, form, {
+                    headers: form.getHeaders()
+                });
+            } catch (imageErr) {
+                console.warn("⚠️ Failed to send photo, falling back to text:", imageErr.message);
+                await axios.post(`${API_URL}/sendMessage`, {
+                    chat_id: chatId,
+                    text: caption,
+                    parse_mode: "HTML",
+                    reply_markup: buttons
+                });
+            }
         });
 
     } catch (err) {
