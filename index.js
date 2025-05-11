@@ -2,7 +2,7 @@ const express = require("express");
 const axios = require("axios");
 const { TOKEN, API_URL } = require("./config");
 const handler = require("./utils/handler");
-const callbackHandler = require("./utils/callbackHandler");
+const callbackHandler = require("./utils/callback");
 
 const app = express();
 const PORT = process.env.PORT || 4000;
