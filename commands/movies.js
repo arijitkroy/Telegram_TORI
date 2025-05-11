@@ -101,6 +101,7 @@ module.exports = async function movies(chatId, userMessage, sendMessage, callbac
         movieCache.set(chatId, results);
 
         results.forEach(async (entry, index) => {
+            if (!entry.name && !entry.imageUrl) return;
             const imageUrl = entry.poster;
             const caption =
                 `<b>Name:</b> ${entry.name}\n` +
