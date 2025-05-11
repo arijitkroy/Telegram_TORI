@@ -12,25 +12,24 @@ app.use(express.json());
 app.post(`/webhook/${TOKEN}`, async (req, res) => {
     const update = req.body;
 
+    const sendMessage = async (chatId, text, extra = {}) => {
+        try {
+            await axios.post(`${API_URL}/sendMessage`, {
+                chat_id: chatId,
+                text,
+                ...extra
+            });
+        } catch (err) {
+            console.error("Telegram sendMessage failed:", err.response?.data || err.message);
+        }
+    };
+
     if (update.message && update.message.text) {
         const chatId = update.message.chat.id;
         const text = update.message.text;
-
-        const sendMessage = async (chatId, text) => {
-            try {
-                await axios.post(`${API_URL}/sendMessage`, {
-                    chat_id: chatId,
-                    text,
-                });
-            } catch (err) {
-                console.error("Telegram sendMessage failed:", err.response?.data || err.message);
-            }
-        };
-
         await handler(chatId, text, sendMessage);
     }
-
-    if (update.callback_query) {
+    else if (update.callback_query) {
         const chatId = update.callback_query.message.chat.id;
         const data = update.callback_query.data;
         await handler(chatId, null, sendMessage, data);
