@@ -25,7 +25,7 @@ module.exports = async function movies(chatId, userMessage, sendMessage) {
         console.log(data.data);
         data.data.data.forEach(async (entries) => {
             let imageUrl = entries.poster;
-            let caption = `Name: ${entries.name}\nGenre: ${entries.genre}\nDate: ${entries.date}\nRating: ${entries.rating}\nRuntime: ${entries.runtime}\nDownloads:\n1. [${entries.torrents[0].quality}](${entries.torrents[0].torrent}) - ${entries.torrent[0].size}\n2. [${entries.torrents[1].quality}](${entries.torrents[1].torrent}) - ${entries.torrent[1].size}\n\nView more details [here](${entries.url})`;
+            let caption = `Name: ${entries.name}\nGenre: ${entries.genre}\nDate: ${entries.date}\nRating: ${entries.rating}\nRuntime: ${entries.runtime}\nDownloads:\n1. [${entries.torrents[0].quality}](${entries.torrents[0].torrent}) - ${entries.torrents[0].size}\n2. [${entries.torrents[1].quality}](${entries.torrents[1].torrent}) - ${entries.torrents[1].size}\n\nView more details [here](${entries.url})`;
 
             const imageResponse = await axios.get(imageUrl, { responseType: 'stream' });
             const fileName = path.basename(imageUrl.split('?')[0]);
