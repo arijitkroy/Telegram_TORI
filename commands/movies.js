@@ -6,24 +6,23 @@ const { API_URL } = require("../config");
 module.exports = async function movies(chatId, userMessage, sendMessage) {
     const args = userMessage.replace('/movies', '').trim();
     if (!args) {
-        sendMessage("⚠️ Search query cannot be empty!");
+        sendMessage(chatId, "⚠️ Search query cannot be empty!");
         return;
     }
     const url = `https://torrent-api-py-nx0x.onrender.com/api/v1/search?site=yts&query=${encodeURIComponent(args)}&limit=4`;
-    sendMessage("🔎 Looking up your movie!");
+    sendMessage(chatId, "🔎 Looking up your movie!");
     try {
-        const data = (await axios.get(url, {
+        const data = await axios.get(url, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Telegram Bot)',
                 'Content-Type': 'application/json'
             }
-        })).data.data;
+        });
         if (!data) {
-            sendMessage("⚠️ Cannot find the movie!");
+            sendMessage(chatId, "⚠️ Cannot find the movie!");
             return;
         }
-        console.log(data.data);
-        data.forEach(async (entries) => {
+        data.data.data.forEach(async (entries) => {
             let imageUrl = entries.poster;
             let caption = 
                 `<b>Name:</b> ${entries.name}\n` +
@@ -32,9 +31,12 @@ module.exports = async function movies(chatId, userMessage, sendMessage) {
                 `<b>Rating:</b> ${entries.rating}\n` +
                 `<b>Runtime:</b> ${entries.runtime}\n\n` +
                 `<b>Downloads:</b>\n` +
-                `1. <a href="${entries.torrents[0].torrent}">${entries.torrents[0].quality}</a> - ${entries.torrents[0].size}\n` +
-                `2. <a href="${entries.torrents[1].torrent}">${entries.torrents[1].quality}</a> - ${entries.torrents[1].size}\n\n` +
-                `<a href="${entries.url}">View more details</a>`;
+                `${
+                    entries.torrents.map((tor, id) => {
+                        `${id}. <a href="${entries.torrents[0].torrent}">${entries.torrents[0].quality}</a> - ${entries.torrents[0].size}\n`;
+                    })
+                    }` +
+                `\n<a href="${entries.url}">View more details</a>`;
 
             const imageResponse = await axios.get(imageUrl, { responseType: 'stream' });
             const fileName = path.basename(imageUrl.split('?')[0]);
