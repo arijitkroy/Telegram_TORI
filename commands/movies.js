@@ -30,7 +30,7 @@ module.exports = async function movies(chatId, userMessage, sendMessage) {
         console.log(data.data);
         data.forEach(async (entries) => {
             let imageUrl = entries.poster;
-            let caption = `Name: ${escapeMarkdown(entries.name)}\nGenre: ${escapeMarkdown(entries.genre)}\nDate: ${escapeMarkdown(entries.date)}\nRating: ${escapeMarkdown(entries.rating)}\nRuntime: ${escapeMarkdown(entries.runtime)}\nDownloads:\n1. [${entries.torrents[0].quality}](${entries.torrents[0].torrent}) - ${escapeMarkdown(entries.torrents[0].size)}\n2. [${entries.torrents[1].quality}](${entries.torrents[1].torrent}) - ${escapeMarkdown(entries.torrents[1].size)}\n\nView more details [here](${entries.url})`;
+            let caption = `Name: ${escapeMarkdown(entries.name)}\nGenre: ${entries.genre}\nDate: ${escapeMarkdown(entries.date)}\nRating: ${escapeMarkdown(entries.rating)}\nRuntime: ${escapeMarkdown(entries.runtime)}\nDownloads:\n1. [${entries.torrents[0].quality}](${entries.torrents[0].torrent}) - ${escapeMarkdown(entries.torrents[0].size)}\n2. [${entries.torrents[1].quality}](${entries.torrents[1].torrent}) - ${escapeMarkdown(entries.torrents[1].size)}\n\nView more details [here](${entries.url})`;
 
             const imageResponse = await axios.get(imageUrl, { responseType: 'stream' });
             const fileName = path.basename(imageUrl.split('?')[0]);
