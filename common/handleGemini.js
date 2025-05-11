@@ -4,7 +4,7 @@ const { addUserMessage, addModelResponse, getConversation, trimConversation, ini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API);
 const model = genAI.getGenerativeModel({
     model: "gemini-2.0-flash",
-    systemInstruction: "You are a helpful assistant in a Telegram bot. Send message in MarkdownV2 and avoid unsupported formatting.",
+    systemInstruction: "You are a helpful assistant in a Telegram bot. Avoid unsupported formatting.",
 });
 
 async function handleGemini(chatId, userMessage, sendMessage) {
