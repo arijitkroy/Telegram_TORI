@@ -75,7 +75,7 @@ module.exports = async function movies(chatId, userMessage, sendMessage, callbac
         return;
     }
 
-    const args = userMessage.replace('/movies', '').trim();
+    const args = userMessage.replace('/moviet', '').trim();
     if (!args) {
         sendMessage(chatId, "⚠️ Search query cannot be empty!");
         return;
