@@ -4,8 +4,7 @@ import { fileURLToPath } from 'url';
 import handleGemini from "../common/handleGemini.js";
 import {
     isAwaitingTorrent,
-    clearUserState,
-    isAwaitingTorrent
+    clearUserState
 } from "../common/memory.js";
 
 const __filename = fileURLToPath(import.meta.url);
