@@ -2,7 +2,6 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 const FormData = require('form-data');
-const bencode = require('bencode');
 const WebTorrent = require('webtorrent');
 const archiver = require('archiver');
 const { API_URL } = require("../config");
@@ -21,60 +20,51 @@ module.exports = async function upload(chatId, userMessage, sendMessage, file = 
     if (!activeUploads.has(chatId)) return;
     activeUploads.delete(chatId);
 
-    try {
-        const fileName = file.file_name || "unknown.torrent";
-        const filePath = path.join(__dirname, `../downloads/${chatId}-${Date.now()}.torrent`);
+    const downloadsDir = path.join(__dirname, `../downloads`);
+    const torrentFilePath = path.join(downloadsDir, `${chatId}-${Date.now()}.torrent`);
+    const extractDir = path.join(downloadsDir, `${chatId}`);
+    const zipPath = path.join(downloadsDir, `${chatId}-${Date.now()}.zip`);
 
+    let client;
+
+    try {
         const fileUrl = `${API_URL}/getFile?file_id=${file.file_id}`;
         const { data: fileMeta } = await axios.get(fileUrl);
         const downloadUrl = `https://api.telegram.org/file/bot${process.env.TOKEN}/${fileMeta.result.file_path}`;
         const response = await axios.get(downloadUrl, { responseType: 'arraybuffer' });
-        fs.writeFileSync(filePath, response.data);
+        fs.writeFileSync(torrentFilePath, response.data);
 
-        let decoded;
-        try {
-            const raw = fs.readFileSync(filePath);
-            decoded = bencode.decode(raw);
-        } catch (err) {
-            await sendMessage(chatId, "❌ Invalid torrent file. Upload cancelled.");
-            fs.unlinkSync(filePath);
-            return;
-        }
-
-        const name = decoded.info?.name?.toString() || 'Unnamed';
-        const files = [];
-
-        if (decoded.info.files) {
-            decoded.info.files.forEach(f => {
-                const length = f.length;
-                const filePath = f.path.map(p => p.toString()).join('/');
-                files.push({ length, path: filePath });
-            });
-        } else {
-            files.push({
-                length: decoded.info.length,
-                path: name
-            });
-        }
-
-        const totalSize = files.reduce((sum, file) => sum + file.length, 0);
-        if (totalSize > 1.9 * 1024 * 1024 * 1024) {
-            await sendMessage(chatId, "⚠️ Torrent too large to send via Telegram. Please download it manually.");
-            fs.unlinkSync(filePath);
-            return;
-        }
-
-        await sendMessage(chatId, `📥 Downloading torrent: <b>${name}</b>`, 'HTML');
-
-        const client = new WebTorrent();
+        client = new WebTorrent();
         const torrent = await new Promise((resolve, reject) => {
-            client.add(filePath, { path: path.join(__dirname, `../downloads/${chatId}`) }, t => {
-                t.on('done', () => resolve(t));
-                t.on('error', reject);
+            client.add(torrentFilePath, { path: extractDir }, t => {
+                let lastSent = 0;
+
+                const interval = setInterval(() => {
+                    const percent = Math.floor(t.progress * 100);
+                    if (percent >= 100 || percent === lastSent) return;
+                    lastSent = percent;
+                    sendMessage(chatId, `⬇️ Downloading... ${percent}%`);
+                }, 5000);
+
+                t.on('done', () => {
+                    clearInterval(interval);
+                    resolve(t);
+                });
+
+                t.on('error', err => {
+                    clearInterval(interval);
+                    reject(err);
+                });
             });
         });
 
-        const zipPath = path.join(__dirname, `../downloads/${chatId}-${Date.now()}.zip`);
+        const totalSize = torrent.files.reduce((sum, file) => sum + file.length, 0);
+        if (totalSize > 1.9 * 1024 * 1024 * 1024) {
+            throw new Error("Torrent too large for Telegram.");
+        }
+
+        await sendMessage(chatId, `📦 Zipping files: <b>${torrent.name}</b>`, 'HTML');
+
         const output = fs.createWriteStream(zipPath);
         const archive = archiver('zip', { zlib: { level: 9 } });
 
@@ -89,21 +79,21 @@ module.exports = async function upload(chatId, userMessage, sendMessage, file = 
         const form = new FormData();
         form.append('chat_id', chatId);
         form.append('document', fs.createReadStream(zipPath), {
-            filename: `${name}.zip`
+            filename: `${torrent.name}.zip`
         });
 
         await axios.post(`${API_URL}/sendDocument`, form, {
             headers: form.getHeaders()
         });
 
-        fs.unlinkSync(filePath);
-        fs.unlinkSync(zipPath);
-        fs.rmSync(path.join(__dirname, `../downloads/${chatId}`), { recursive: true, force: true });
-        client.destroy();
-
     } catch (err) {
         console.error("❌ Upload error:", err.message);
         await sendMessage(chatId, "❌ Failed to process the torrent file.");
+    } finally {
+        try { if (fs.existsSync(torrentFilePath)) fs.unlinkSync(torrentFilePath); } catch {}
+        try { if (fs.existsSync(zipPath)) fs.unlinkSync(zipPath); } catch {}
+        try { if (fs.existsSync(extractDir)) fs.rmSync(extractDir, { recursive: true, force: true }); } catch {}
+        if (client) client.destroy();
     }
 };
 
