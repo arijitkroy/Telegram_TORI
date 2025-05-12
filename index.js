@@ -40,6 +40,10 @@ app.post(`/webhook/${TOKEN}`, async (req, res) => {
 });
 
 app.get("/", async (req, res) => {
+    res.send("TORI is up and running!");
+});
+
+initCommands().then(async () => {
     try {
         const webhookUrl = `https://${req.get("host")}/webhook/${TOKEN}`;
         console.log("Setting webhook to:", webhookUrl);
@@ -52,13 +56,11 @@ app.get("/", async (req, res) => {
     } catch (err) {
         console.error("Error setting webhook:", err.response?.data || err.message);
         res.status(500).send("Error setting webhook: " + (err.response?.data?.description || err.message));
+    } finally {
+        app.listen(PORT, () => {
+            console.log(`🚀 Server is running on port ${PORT}`);
+        });
     }
-});
-
-initCommands().then(() => {
-    app.listen(PORT, () => {
-        console.log(`🚀 Server is running on port ${PORT}`);
-    });
 }).catch(err => {
     console.error("❌ Failed to initialize commands:", err.message);
     process.exit(1);

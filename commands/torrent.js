@@ -76,7 +76,6 @@ async function torrentCommand(chatId, userMessage, sendMessage, callback_data, f
         });
         await archive.finalize();
 
-        // Send ZIP to user
         const form = new FormData();
         form.append('chat_id', chatId);
         form.append('document', fs.createReadStream(zipPath), {
