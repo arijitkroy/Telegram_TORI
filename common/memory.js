@@ -1,4 +1,17 @@
 const chatMemory = {};
+const userStates = new Map();
+
+function setAwaitingTorrent(chatId) {
+    userStates.set(chatId, { awaitingTorrent: true });
+}
+
+function clearUserState(chatId) {
+    userStates.delete(chatId);
+}
+
+function isAwaitingTorrent(chatId) {
+    return userStates.get(chatId)?.awaitingTorrent;
+}
 
 function initChat(chatId) {
     if (!chatMemory[chatId]) {
@@ -35,6 +48,9 @@ function clearConversation(chatId) {
 }
 
 module.exports = {
+    setAwaitingTorrent,
+    clearUserState,
+    isAwaitingTorrent,
     initChat,
     addUserMessage,
     addModelResponse,

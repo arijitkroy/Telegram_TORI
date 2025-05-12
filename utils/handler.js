@@ -1,6 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 const handleGemini = require("../common/handleGemini");
+const {
+    clearUserState,
+    isAwaitingTorrent
+} = require("../common/memory");
 
 const commands = {};
 
@@ -9,7 +13,7 @@ fs.readdirSync(path.join(__dirname, '..', 'commands')).forEach(file => {
     commands[`/${name}`] = require(path.join(__dirname, '..', 'commands', file));
 });
 
-module.exports = async function handler(chatId, text, sendMessage, callbackData = null) {
+module.exports = async function handler(chatId, text, sendMessage, callbackData = null, document = null) {
     try {
         if (callbackData) {
             for (const [_, commandHandler] of Object.entries(commands)) {
@@ -21,6 +25,18 @@ module.exports = async function handler(chatId, text, sendMessage, callbackData 
             await sendMessage(chatId, "⚠️ Action not supported.");
             return;
         }
+
+        if (document && isAwaitingTorrent(chatId)) {
+            clearUserState(chatId);
+            const uploadHandler = commands["/upload"];
+            if (uploadHandler && uploadHandler.handleDocument) {
+                await uploadHandler.handleDocument(chatId, document, sendMessage);
+            } else {
+                await sendMessage(chatId, "⚠️ Upload not supported at the moment.");
+            }
+            return;
+        }
+
         const trimmedText = text.trim();
         const [command] = trimmedText.split(' ');
         const commandHandler = commands[command];
