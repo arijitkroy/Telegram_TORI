@@ -1,20 +1,21 @@
 import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import FormData from 'form-data';
 import WebTorrent from 'webtorrent';
 import archiver from 'archiver';
-import { fileURLToPath } from 'url';
+import parseTorrent from 'parse-torrent';
 import { API_URL } from '../config.js';
 import { setAwaitingTorrent } from '../common/memory.js';
 
 const activeUploads = new Set();
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-async function torrentCommand(chatId, userMessage, sendMessage, callback_data, file = null) {
+export const upload = async (chatId, userMessage, sendMessage, file = null) => {
     setAwaitingTorrent(chatId);
+
     if (!file) {
         await sendMessage(chatId, "📤 Please send a `.torrent` file to upload.");
         activeUploads.add(chatId);
@@ -35,45 +36,57 @@ async function torrentCommand(chatId, userMessage, sendMessage, callback_data, f
         const fileUrl = `${API_URL}/getFile?file_id=${file.file_id}`;
         const { data: fileMeta } = await axios.get(fileUrl);
         const downloadUrl = `https://api.telegram.org/file/bot${process.env.TOKEN}/${fileMeta.result.file_path}`;
-        const response = await axios.get(downloadUrl, { responseType: 'arraybuffer' });
-        fs.writeFileSync(torrentFilePath, response.data);
+        const { data } = await axios.get(downloadUrl, { responseType: 'arraybuffer' });
+        fs.writeFileSync(torrentFilePath, data);
+
+        let parsed;
+        try {
+            parsed = parseTorrent(fs.readFileSync(torrentFilePath));
+        } catch {
+            await sendMessage(chatId, "⚠️ Invalid or corrupted `.torrent` file.");
+            return;
+        }
+
+        const totalSize = parsed.files?.reduce((sum, f) => sum + f.length, 0) || 0;
+        if (totalSize > 1.9 * 1024 * 1024 * 1024) {
+            await sendMessage(chatId, "⚠️ Torrent contents exceed 1.9 GB and cannot be sent via Telegram.");
+            return;
+        }
 
         client = new WebTorrent();
         const torrent = await new Promise((resolve, reject) => {
-            client.add(torrentFilePath, { path: extractDir }, t => {
+            client.add(torrentFilePath, { path: extractDir }, torrent => {
                 let lastSent = 0;
                 const interval = setInterval(() => {
-                    const percent = Math.floor(t.progress * 100);
+                    const percent = Math.floor(torrent.progress * 100);
                     if (percent >= 100 || percent === lastSent) return;
                     lastSent = percent;
                     sendMessage(chatId, `⬇️ Downloading... ${percent}%`);
                 }, 5000);
 
-                t.on('done', () => {
+                torrent.on('done', () => {
                     clearInterval(interval);
-                    resolve(t);
+                    resolve(torrent);
                 });
-                t.on('error', err => {
+
+                torrent.on('error', err => {
                     clearInterval(interval);
                     reject(err);
                 });
             });
         });
 
-        const totalSize = torrent.files.reduce((sum, f) => sum + f.length, 0);
-        if (totalSize > 1.9 * 1024 * 1024 * 1024) {
-            throw new Error("Torrent too large for Telegram.");
-        }
-
         await sendMessage(chatId, `📦 Zipping files: <b>${torrent.name}</b>`, 'HTML');
 
         const output = fs.createWriteStream(zipPath);
         const archive = archiver('zip', { zlib: { level: 9 } });
+
         archive.pipe(output);
-        torrent.files.forEach(f => {
-            const source = path.join(torrent.path, f.path);
-            archive.file(source, { name: f.path });
+        torrent.files.forEach(({ path: filePath }) => {
+            const source = path.join(torrent.path, filePath);
+            archive.file(source, { name: filePath });
         });
+
         await archive.finalize();
 
         const form = new FormData();
@@ -81,6 +94,7 @@ async function torrentCommand(chatId, userMessage, sendMessage, callback_data, f
         form.append('document', fs.createReadStream(zipPath), {
             filename: `${torrent.name}.zip`
         });
+
         await axios.post(`${API_URL}/sendDocument`, form, {
             headers: form.getHeaders()
         });
@@ -88,15 +102,13 @@ async function torrentCommand(chatId, userMessage, sendMessage, callback_data, f
     } catch (err) {
         console.error("❌ Upload error:", err.message);
         await sendMessage(chatId, "❌ Failed to process the torrent file.");
-
     } finally {
-        try { fs.unlinkSync(torrentFilePath); } catch {}
-        try { fs.unlinkSync(zipPath); } catch {}
-        try { fs.rmSync(extractDir, { recursive: true, force: true }); } catch {}
-        if (client) client.destroy();
+        try { fs.existsSync(torrentFilePath) && fs.unlinkSync(torrentFilePath); } catch {}
+        try { fs.existsSync(zipPath) && fs.unlinkSync(zipPath); } catch {}
+        try { fs.existsSync(extractDir) && fs.rmSync(extractDir, { recursive: true, force: true }); } catch {}
+        client?.destroy();
     }
-}
+};
 
-torrentCommand.syntax = "/torrent - Upload a .torrent file and receive content as zip.";
-torrentCommand.file = true;
-export default torrentCommand;
+export const syntax = "/torrent - Upload a .torrent file and receive content as zip.";
+export const file = true;
