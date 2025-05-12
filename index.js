@@ -44,7 +44,7 @@ app.get("/", async (req, res) => {
 });
 
 initCommands().then(async () => {
-    const webhookUrl = `https://your-domain.com/webhook/${TOKEN}`;
+    const webhookUrl = `https://${process.env.RENDER_HOST}/webhook/${TOKEN}`;
     console.log("Setting webhook to:", webhookUrl);
     try {
         const response = await axios.get(`${API_URL}/setWebhook`, {
