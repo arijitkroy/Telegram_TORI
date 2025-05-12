@@ -13,7 +13,7 @@ const activeUploads = new Set();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export const upload = async (chatId, userMessage, sendMessage, file = null) => {
+async function torrent(chatId, userMessage, sendMessage, file = null) {
     setAwaitingTorrent(chatId);
 
     if (!file) {
@@ -110,5 +110,6 @@ export const upload = async (chatId, userMessage, sendMessage, file = null) => {
     }
 };
 
-export const syntax = "/torrent - Upload a .torrent file and receive content as zip.";
-export const file = true;
+torrent.syntax = "/torrent - Upload a .torrent file and receive content as zip.";
+torrent.file = true;
+export default torrent;
