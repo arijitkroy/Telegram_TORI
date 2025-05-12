@@ -1,7 +1,7 @@
 import express from "express";
 import axios from "axios";
 import { TOKEN, API_URL } from "./config.js";
-import handler from "./utils/handler.js";
+import handler, { initCommands } from "./utils/handler.js";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -23,9 +23,9 @@ app.post(`/webhook/${TOKEN}`, async (req, res) => {
         }
     };
 
-    if (update.message && update.message.text) {
+    if (update.message) {
         const chatId = update.message.chat.id;
-        const text = update.message.text;
+        const text = update.message.text || "";
         const document = update.message.document || null;
         await handler(chatId, text, sendMessage, null, document);
     }
@@ -55,6 +55,11 @@ app.get("/", async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`🚀 Server is running on port ${PORT}`);
+initCommands().then(() => {
+    app.listen(PORT, () => {
+        console.log(`🚀 Server is running on port ${PORT}`);
+    });
+}).catch(err => {
+    console.error("❌ Failed to initialize commands:", err.message);
+    process.exit(1);
 });
