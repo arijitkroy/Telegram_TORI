@@ -1,5 +1,3 @@
-// commands/upload.js
-
 import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
@@ -15,7 +13,7 @@ const activeUploads = new Set();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-async function uploadCommand(chatId, userMessage, sendMessage, file = null) {
+async function torrentCommand(chatId, userMessage, sendMessage, callback_data, file = null) {
     setAwaitingTorrent(chatId);
     if (!file) {
         await sendMessage(chatId, "📤 Please send a `.torrent` file to upload.");
@@ -34,14 +32,12 @@ async function uploadCommand(chatId, userMessage, sendMessage, file = null) {
     let client;
 
     try {
-        // Download the .torrent file from Telegram
         const fileUrl = `${API_URL}/getFile?file_id=${file.file_id}`;
         const { data: fileMeta } = await axios.get(fileUrl);
         const downloadUrl = `https://api.telegram.org/file/bot${process.env.TOKEN}/${fileMeta.result.file_path}`;
         const response = await axios.get(downloadUrl, { responseType: 'arraybuffer' });
         fs.writeFileSync(torrentFilePath, response.data);
 
-        // Start webtorrent client
         client = new WebTorrent();
         const torrent = await new Promise((resolve, reject) => {
             client.add(torrentFilePath, { path: extractDir }, t => {
@@ -64,7 +60,6 @@ async function uploadCommand(chatId, userMessage, sendMessage, file = null) {
             });
         });
 
-        // Check size limit
         const totalSize = torrent.files.reduce((sum, f) => sum + f.length, 0);
         if (totalSize > 1.9 * 1024 * 1024 * 1024) {
             throw new Error("Torrent too large for Telegram.");
@@ -72,7 +67,6 @@ async function uploadCommand(chatId, userMessage, sendMessage, file = null) {
 
         await sendMessage(chatId, `📦 Zipping files: <b>${torrent.name}</b>`, 'HTML');
 
-        // Create ZIP
         const output = fs.createWriteStream(zipPath);
         const archive = archiver('zip', { zlib: { level: 9 } });
         archive.pipe(output);
@@ -95,8 +89,8 @@ async function uploadCommand(chatId, userMessage, sendMessage, file = null) {
     } catch (err) {
         console.error("❌ Upload error:", err.message);
         await sendMessage(chatId, "❌ Failed to process the torrent file.");
+
     } finally {
-        // Cleanup
         try { fs.unlinkSync(torrentFilePath); } catch {}
         try { fs.unlinkSync(zipPath); } catch {}
         try { fs.rmSync(extractDir, { recursive: true, force: true }); } catch {}
@@ -104,6 +98,6 @@ async function uploadCommand(chatId, userMessage, sendMessage, file = null) {
     }
 }
 
-uploadCommand.syntax = "/torrent - Upload a .torrent file and receive content as zip.";
-uploadCommand.file = true;
-export default uploadCommand;
+torrentCommand.syntax = "/torrent - Upload a .torrent file and receive content as zip.";
+torrentCommand.file = true;
+export default torrentCommand;

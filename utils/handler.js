@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import handleGemini from "../common/handleGemini.js";
 import {
+    isAwaitingTorrent,
     clearUserState,
     isAwaitingTorrent
 } from "../common/memory.js";
@@ -35,9 +36,14 @@ export default async function handler(chatId, text, sendMessage, callbackData = 
 
         if (document && isAwaitingTorrent(chatId)) {
             clearUserState(chatId);
-            const uploadHandler = commands["/torrent"];
-            if (uploadHandler && uploadHandler.handleDocument) {
-                await uploadHandler.handleDocument(chatId, document, sendMessage);
+            const cmd = commands["/torrent"];
+            if (cmd) {
+                if (typeof cmd.handleDocument === "function") {
+                    await cmd.handleDocument(chatId, "", sendMessage, null, document);
+                }
+                else if (cmd.file === true) {
+                    await cmd(chatId, "", sendMessage, null, document);
+                }
             } else {
                 await sendMessage(chatId, "⚠️ Upload not supported at the moment.");
             }
