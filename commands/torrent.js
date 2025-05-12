@@ -2,7 +2,7 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 const FormData = require('form-data');
-const parseTorrent = require('parse-torrent');
+const bencode = require('bencode');
 const WebTorrent = require('webtorrent');
 const archiver = require('archiver');
 const { API_URL } = require("../config");
@@ -31,23 +31,40 @@ module.exports = async function upload(chatId, userMessage, sendMessage, file = 
         const response = await axios.get(downloadUrl, { responseType: 'arraybuffer' });
         fs.writeFileSync(filePath, response.data);
 
-        let parsed;
+        let decoded;
         try {
-            parsed = parseTorrent(fs.readFileSync(filePath));
+            const raw = fs.readFileSync(filePath);
+            decoded = bencode.decode(raw);
         } catch (err) {
             await sendMessage(chatId, "❌ Invalid torrent file. Upload cancelled.");
             fs.unlinkSync(filePath);
             return;
         }
 
-        const totalSize = parsed.files.reduce((sum, file) => sum + file.length, 0);
+        const name = decoded.info?.name?.toString() || 'Unnamed';
+        const files = [];
+
+        if (decoded.info.files) {
+            decoded.info.files.forEach(f => {
+                const length = f.length;
+                const filePath = f.path.map(p => p.toString()).join('/');
+                files.push({ length, path: filePath });
+            });
+        } else {
+            files.push({
+                length: decoded.info.length,
+                path: name
+            });
+        }
+
+        const totalSize = files.reduce((sum, file) => sum + file.length, 0);
         if (totalSize > 1.9 * 1024 * 1024 * 1024) {
             await sendMessage(chatId, "⚠️ Torrent too large to send via Telegram. Please download it manually.");
             fs.unlinkSync(filePath);
             return;
         }
 
-        await sendMessage(chatId, `📥 Downloading torrent: <b>${parsed.name}</b>`, 'HTML');
+        await sendMessage(chatId, `📥 Downloading torrent: <b>${name}</b>`, 'HTML');
 
         const client = new WebTorrent();
         const torrent = await new Promise((resolve, reject) => {
@@ -72,7 +89,7 @@ module.exports = async function upload(chatId, userMessage, sendMessage, file = 
         const form = new FormData();
         form.append('chat_id', chatId);
         form.append('document', fs.createReadStream(zipPath), {
-            filename: `${parsed.name}.zip`
+            filename: `${name}.zip`
         });
 
         await axios.post(`${API_URL}/sendDocument`, form, {
