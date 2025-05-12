@@ -1,7 +1,7 @@
-const express = require("express");
-const axios = require("axios");
-const { TOKEN, API_URL } = require("./config");
-const handler = require("./utils/handler");
+import express from "express";
+import axios from "axios";
+import { TOKEN, API_URL } from "./config.js";
+import handler from "./utils/handler.js";
 
 const app = express();
 const PORT = process.env.PORT || 4000;

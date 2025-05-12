@@ -1,19 +1,26 @@
-const fs = require('fs');
-const path = require('path');
-const handleGemini = require("../common/handleGemini");
-const {
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import handleGemini from "../common/handleGemini.js";
+import {
     clearUserState,
     isAwaitingTorrent
-} = require("../common/memory");
+} from "../common/memory.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const commands = {};
 
-fs.readdirSync(path.join(__dirname, '..', 'commands')).forEach(file => {
+const commandsDir = path.join(__dirname, '..', 'commands');
+fs.readdirSync(commandsDir).forEach(file => {
     const name = path.basename(file, '.js');
-    commands[`/${name}`] = require(path.join(__dirname, '..', 'commands', file));
+    const commandPath = path.join(commandsDir, file);
+    const commandModule = await import(commandPath);
+    commands[`/${name}`] = commandModule.default || commandModule;
 });
 
-module.exports = async function handler(chatId, text, sendMessage, callbackData = null, document = null) {
+export default async function handler(chatId, text, sendMessage, callbackData = null, document = null) {
     try {
         if (callbackData) {
             for (const [_, commandHandler] of Object.entries(commands)) {
@@ -52,4 +59,4 @@ module.exports = async function handler(chatId, text, sendMessage, callbackData 
         console.error("Handler failed:", err.message);
         await sendMessage(chatId, "⚠️ An internal error occurred.");
     }
-};
+}

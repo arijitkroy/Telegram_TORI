@@ -1,20 +1,27 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-module.exports = async function helpCommand(chatId, args, sendMessage) {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+async function helpCommand(chatId, args, sendMessage) {
     const commandsPath = path.join(__dirname);
     const files = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js') && file !== 'help.js');
 
     let helpText = '📜 Available Commands:\n\n';
 
     for (const file of files) {
-        const command = require(path.join(commandsPath, file));
+        const commandPath = path.join(commandsPath, file);
+        const commandModule = await import(commandPath);
+        const command = commandModule.default || commandModule;
         const syntax = command.syntax || `/${path.basename(file, '.js')} - No description`;
         helpText += `• ${syntax}\n`;
     }
 
-    helpText += '\nNote: You can chatting normally without using /\nHave fun ;)\n';
-    sendMessage(chatId, helpText);
-};
+    helpText += '\nNote: You can chat normally without using /\nHave fun ;)\n';
+    await sendMessage(chatId, helpText);
+}
 
-module.exports.syntax = '/help - Show this help message';
+helpCommand.syntax = '/help - Show this help message';
+export default helpCommand;

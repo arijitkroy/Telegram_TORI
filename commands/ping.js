@@ -1,5 +1,6 @@
-module.exports = async function (chatId, text, sendMessage) {
+async function pingCommand(chatId, text, sendMessage) {
     await sendMessage(chatId, "Pong!");
 }
 
-module.exports.syntax = '/ping - Replies with Pong!';
+pingCommand.syntax = '/ping - Replies with Pong!';
+export default pingCommand;
