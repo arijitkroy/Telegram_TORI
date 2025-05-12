@@ -1,17 +1,19 @@
-const axios = require('axios');
-const FormData = require('form-data');
-const { API_URL } = require("../config");
-const path = require('path');
-const { default: axiosRetry } = require('axios-retry');
-
+import axios from 'axios';
+import FormData from 'form-data';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import axiosRetry from 'axios-retry';
+import { API_URL } from "../config.js";
 axiosRetry(axios, { retries: 3 });
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 function escapeMarkdown(text) {
-    return text
-        .replace(/[_*[\]()~`>#+\-=|{}.!]/g, '\\$&');
+    return text.replace(/[_*[\]()~`>#+\-=|{}.!]/g, '\\$&');
 }
 
-module.exports = async function memeCommand(chatId, args, sendMessage) {
+async function memeCommand(chatId, args, sendMessage) {
     const sub_reddit = args.replace('/meme', '').trim();
     const url = sub_reddit 
         ? `https://meme-api.com/gimme/${sub_reddit}` 
@@ -30,7 +32,7 @@ module.exports = async function memeCommand(chatId, args, sendMessage) {
         const imageUrl = !nsfw ? data.url : null;
 
         if (!imageUrl || typeof imageUrl !== 'string' || !imageUrl.startsWith('http')) {
-            sendMessage(chatId, "⚠️ Couldn't load meme image. Try again.");
+            await sendMessage(chatId, "⚠️ Couldn't load meme image. Try again.");
             return;
         }
 
@@ -40,12 +42,10 @@ module.exports = async function memeCommand(chatId, args, sendMessage) {
         const fileName = path.basename(imageUrl.split('?')[0]);
 
         const form = new FormData();
-            form.append('chat_id', chatId);
-            form.append('caption', caption);
-            form.append('parse_mode', 'MarkdownV2');
-            form.append('photo', imageResponse.data, {
-                filename: fileName
-        });
+        form.append('chat_id', chatId);
+        form.append('caption', caption);
+        form.append('parse_mode', 'MarkdownV2');
+        form.append('photo', imageResponse.data, { filename: fileName });
 
         await axios.post(`${API_URL}/sendPhoto`, form, {
             headers: form.getHeaders()
@@ -54,8 +54,9 @@ module.exports = async function memeCommand(chatId, args, sendMessage) {
         console.log("✅ Meme sent successfully.");
     } catch (err) {
         console.error("❌ Error in memeCommand:", err.response?.data || err.message);
-        sendMessage(chatId, "❌ Couldn't send the meme. It might be an unsupported format or a Telegram error.");
+        await sendMessage(chatId, "❌ Couldn't send the meme. It might be an unsupported format or a Telegram error.");
     }
-};
+}
 
-module.exports.syntax = '/meme [subreddit] - Fetches a random meme from random subreddit if not provided';
+memeCommand.syntax = '/meme [subreddit] - Fetches a random meme from random subreddit if not provided';
+export default memeCommand;

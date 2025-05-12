@@ -1,7 +1,7 @@
-const express = require("express");
-const axios = require("axios");
-const { TOKEN, API_URL } = require("./config");
-const handler = require("./utils/handler");
+import express from "express";
+import axios from "axios";
+import { TOKEN, API_URL } from "./config.js";
+import handler, { initCommands } from "./utils/handler.js";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -23,9 +23,9 @@ app.post(`/webhook/${TOKEN}`, async (req, res) => {
         }
     };
 
-    if (update.message && update.message.text) {
+    if (update.message) {
         const chatId = update.message.chat.id;
-        const text = update.message.text;
+        const text = update.message.text || "";
         const document = update.message.document || null;
         await handler(chatId, text, sendMessage, null, document);
     }
@@ -40,21 +40,25 @@ app.post(`/webhook/${TOKEN}`, async (req, res) => {
 });
 
 app.get("/", async (req, res) => {
-    try {
-        const webhookUrl = `https://${req.get("host")}/webhook/${TOKEN}`;
-        console.log("Setting webhook to:", webhookUrl);
+    res.send("TORI is up and running!");
+});
 
+initCommands().then(async () => {
+    const webhookUrl = `https://your-domain.com/webhook/${TOKEN}`;
+    console.log("Setting webhook to:", webhookUrl);
+    try {
         const response = await axios.get(`${API_URL}/setWebhook`, {
             params: { url: webhookUrl }
         });
-
-        res.send("Webhook set successfully: " + JSON.stringify(response.data));
+        console.log("Webhook set successfully:", response.data);
     } catch (err) {
         console.error("Error setting webhook:", err.response?.data || err.message);
-        res.status(500).send("Error setting webhook: " + (err.response?.data?.description || err.message));
+    } finally {
+        app.listen(PORT, () => {
+            console.log(`🚀 Server is running on port ${PORT}`);
+        });
     }
-});
-
-app.listen(PORT, () => {
-    console.log(`🚀 Server is running on port ${PORT}`);
+}).catch(err => {
+    console.error("❌ Failed to initialize commands:", err.message);
+    process.exit(1);
 });

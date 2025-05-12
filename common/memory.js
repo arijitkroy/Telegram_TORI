@@ -47,7 +47,7 @@ function clearConversation(chatId) {
     chatMemory[chatId] = [];
 }
 
-module.exports = {
+export {
     setAwaitingTorrent,
     clearUserState,
     isAwaitingTorrent,

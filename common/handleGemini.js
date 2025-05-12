@@ -1,13 +1,20 @@
-const { GoogleGenerativeAI } = require("@google/generative-ai");
-const { addUserMessage, addModelResponse, getConversation, trimConversation, initChat } = require("./memory");
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import {
+    addUserMessage,
+    addModelResponse,
+    getConversation,
+    trimConversation,
+    initChat
+} from "./memory.js";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API);
+
 const model = genAI.getGenerativeModel({
     model: "gemini-2.0-flash",
     systemInstruction: "You are a helpful assistant in a Telegram bot. Avoid unsupported formatting.",
 });
 
-async function handleGemini(chatId, userMessage, sendMessage) {
+export default async function handleGemini(chatId, userMessage, sendMessage) {
     initChat(chatId);
 
     if (typeof userMessage !== "string") {
@@ -20,7 +27,6 @@ async function handleGemini(chatId, userMessage, sendMessage) {
     trimConversation(chatId, 20);
 
     const history = getConversation(chatId);
-
     const chatSession = model.startChat({ history });
 
     try {
@@ -34,5 +40,3 @@ async function handleGemini(chatId, userMessage, sendMessage) {
         await sendMessage(chatId, "❌ Failed to get a response from Gemini.");
     }
 }
-
-module.exports = handleGemini;

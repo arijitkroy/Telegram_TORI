@@ -1,8 +1,9 @@
-const { clearConversation } = require("../common/memory");
+import { clearConversation } from "../common/memory.js";
 
-module.exports = async function(chatId, text, sendMessage) {
+async function clearCommand(chatId, text, sendMessage) {
     clearConversation(chatId);
     await sendMessage(chatId, "🧹 Your conversation has been cleared.");
-};
+}
 
-module.exports.syntax = '/clear - Clears your chat history with AI';
+clearCommand.syntax = '/clear - Clears your chat history with AI';
+export default clearCommand;

@@ -1,19 +1,29 @@
-const fs = require('fs');
-const path = require('path');
-const handleGemini = require("../common/handleGemini");
-const {
-    clearUserState,
-    isAwaitingTorrent
-} = require("../common/memory");
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import handleGemini from "../common/handleGemini.js";
+import {
+    isAwaitingTorrent,
+    clearUserState
+} from "../common/memory.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const commands = {};
 
-fs.readdirSync(path.join(__dirname, '..', 'commands')).forEach(file => {
-    const name = path.basename(file, '.js');
-    commands[`/${name}`] = require(path.join(__dirname, '..', 'commands', file));
-});
+const commandsDir = path.join(__dirname, '..', 'commands');
+export async function initCommands() {
+    const files = fs.readdirSync(commandsDir);
+    for (const file of files) {
+        const name = path.basename(file, '.js');
+        const commandPath = path.join(commandsDir, file);
+        const commandModule = await import(commandPath);
+        commands[`/${name}`] = commandModule.default || commandModule;
+    }
+}
 
-module.exports = async function handler(chatId, text, sendMessage, callbackData = null, document = null) {
+export default async function handler(chatId, text, sendMessage, callbackData = null, document = null) {
     try {
         if (callbackData) {
             for (const [_, commandHandler] of Object.entries(commands)) {
@@ -28,9 +38,14 @@ module.exports = async function handler(chatId, text, sendMessage, callbackData 
 
         if (document && isAwaitingTorrent(chatId)) {
             clearUserState(chatId);
-            const uploadHandler = commands["/torrent"];
-            if (uploadHandler && uploadHandler.handleDocument) {
-                await uploadHandler.handleDocument(chatId, document, sendMessage);
+            const cmd = commands["/torrent"];
+            if (cmd) {
+                if (typeof cmd.handleDocument === "function") {
+                    await cmd.handleDocument(chatId, "", sendMessage, null, document);
+                }
+                else if (cmd.file === true) {
+                    await cmd(chatId, "", sendMessage, null, document);
+                }
             } else {
                 await sendMessage(chatId, "⚠️ Upload not supported at the moment.");
             }
@@ -52,4 +67,4 @@ module.exports = async function handler(chatId, text, sendMessage, callbackData 
         console.error("Handler failed:", err.message);
         await sendMessage(chatId, "⚠️ An internal error occurred.");
     }
-};
+}

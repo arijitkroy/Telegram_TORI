@@ -1,9 +1,13 @@
-const axios = require("axios");
-const FormData = require('form-data');
-const path = require("path");
-const { API_URL } = require("../config");
+import axios from "axios";
+import FormData from "form-data";
+import path from "path";
+import { fileURLToPath } from "url";
+import { API_URL } from "../config.js";
 
 const movieCache = new Map();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 async function sendTorrent(chatId, movie, torrent) {
     const fileName = `${movie.name}_${torrent.quality}.torrent`.replace(/\s+/g, "_");
@@ -23,7 +27,7 @@ async function sendTorrent(chatId, movie, torrent) {
     });
 }
 
-module.exports = async function movies(chatId, userMessage, sendMessage, callbackData = null) {
+async function movies(chatId, userMessage, sendMessage, callbackData = null) {
     if (callbackData) {
         if (callbackData.startsWith("download_")) {
             const index = parseInt(callbackData.split("_")[1]);
@@ -33,12 +37,10 @@ module.exports = async function movies(chatId, userMessage, sendMessage, callbac
             const movie = cached[index];
             const torrents = movie.torrents;
 
-            const buttons = torrents.map((tor, i) => {
-                return [{
-                    text: `${tor.quality} [${tor.type}] - ${tor.size}`,
-                    callback_data: `torrent_${index}_${i}`
-                }];
-            });
+            const buttons = torrents.map((tor, i) => [{
+                text: `${tor.quality} [${tor.type}] - ${tor.size}`,
+                callback_data: `torrent_${index}_${i}`
+            }]);
 
             buttons.push([{ text: "🔙 Cancel", callback_data: "cancel" }]);
 
@@ -145,7 +147,8 @@ module.exports = async function movies(chatId, userMessage, sendMessage, callbac
         console.error("❌ Error in /movies:", err.response?.data || err.message);
         sendMessage(chatId, "❌ Couldn't fetch the movie. It might be an unsupported format or a Telegram error.");
     }
-};
+}
 
-module.exports.syntax = "/movies [movie name] - Use YTS Torrent API to get the movies.";
-module.exports.callback = true;
+movies.syntax = "/movies [movie name] - Use YTS Torrent API to get the movies.";
+movies.callback = true;
+export default movies;
