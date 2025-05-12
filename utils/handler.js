@@ -13,7 +13,7 @@ const __dirname = path.dirname(__filename);
 const commands = {};
 
 const commandsDir = path.join(__dirname, '..', 'commands');
-fs.readdirSync(commandsDir).forEach(file => {
+fs.readdirSync(commandsDir).forEach(async file => {
     const name = path.basename(file, '.js');
     const commandPath = path.join(commandsDir, file);
     const commandModule = await import(commandPath);
