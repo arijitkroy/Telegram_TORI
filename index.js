@@ -44,18 +44,15 @@ app.get("/", async (req, res) => {
 });
 
 initCommands().then(async () => {
+    const webhookUrl = `https://your-domain.com/webhook/${TOKEN}`;
+    console.log("Setting webhook to:", webhookUrl);
     try {
-        const webhookUrl = `https://${req.get("host")}/webhook/${TOKEN}`;
-        console.log("Setting webhook to:", webhookUrl);
-
         const response = await axios.get(`${API_URL}/setWebhook`, {
             params: { url: webhookUrl }
         });
-
-        res.send("Webhook set successfully: " + JSON.stringify(response.data));
+        console.log("Webhook set successfully:", response.data);
     } catch (err) {
         console.error("Error setting webhook:", err.response?.data || err.message);
-        res.status(500).send("Error setting webhook: " + (err.response?.data?.description || err.message));
     } finally {
         app.listen(PORT, () => {
             console.log(`🚀 Server is running on port ${PORT}`);
