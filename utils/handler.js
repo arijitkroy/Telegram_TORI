@@ -28,7 +28,7 @@ module.exports = async function handler(chatId, text, sendMessage, callbackData 
 
         if (document && isAwaitingTorrent(chatId)) {
             clearUserState(chatId);
-            const uploadHandler = commands["/upload"];
+            const uploadHandler = commands["/torrent"];
             if (uploadHandler && uploadHandler.handleDocument) {
                 await uploadHandler.handleDocument(chatId, document, sendMessage);
             } else {
