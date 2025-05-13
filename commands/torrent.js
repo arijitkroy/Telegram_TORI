@@ -6,7 +6,7 @@ import FormData from 'form-data';
 import WebTorrent from 'webtorrent';
 import archiver from 'archiver';
 import parseTorrent from 'parse-torrent';
-import { API_URL } from '../config.js';
+import { API_URL, TOKEN } from '../config.js';
 import { setAwaitingTorrent } from '../common/memory.js';
 
 const activeUploads = new Set();
@@ -35,7 +35,7 @@ async function torrent(chatId, userMessage, sendMessage, callback_data, file = n
         const fileUrl = `${API_URL}/getFile?file_id=${file.file_id}`;
         const { data: fileMeta } = await axios.get(fileUrl);
         console.log("fileMeta:", fileMeta);
-        const downloadUrl = `https://api.telegram.org/file/bot${process.env.TOKEN}/${fileMeta.result.file_path}`;
+        const downloadUrl = `https://api.telegram.org/file/bot${TOKEN}/${fileMeta.result.file_path}`;
         console.log("Download URL:", downloadUrl);
         const { data } = await axios.get(downloadUrl, { responseType: 'arraybuffer' });
         fs.writeFileSync(torrentFilePath, data);
