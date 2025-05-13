@@ -14,9 +14,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 async function torrent(chatId, userMessage, sendMessage, callback_data, file = null) {
-    setAwaitingTorrent(chatId);
-
     if (!file) {
+        setAwaitingTorrent(chatId);
         await sendMessage(chatId, "📤 Please send a `.torrent` file to upload.");
         activeUploads.add(chatId);
         return;

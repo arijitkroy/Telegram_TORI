@@ -37,9 +37,9 @@ export default async function handler(chatId, text, sendMessage, callbackData = 
         }
 
         if (document && isAwaitingTorrent(chatId)) {
-            clearUserState(chatId);
             const cmd = commands["/torrent"];
             if (cmd) {
+                clearUserState(chatId);
                 if (typeof cmd.handleDocument === "function") {
                     await cmd.handleDocument(chatId, "", sendMessage, null, document);
                 }
