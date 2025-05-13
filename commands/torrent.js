@@ -34,6 +34,7 @@ async function torrent(chatId, userMessage, sendMessage, callback_data, file = n
     try {
         const fileUrl = `${API_URL}/getFile?file_id=${file.file_id}`;
         const { data: fileMeta } = await axios.get(fileUrl);
+        console.log("fileMeta:", fileMeta);
         const downloadUrl = `https://api.telegram.org/file/bot${process.env.TOKEN}/${fileMeta.result.file_path}`;
         const { data } = await axios.get(downloadUrl, { responseType: 'arraybuffer' });
         fs.writeFileSync(torrentFilePath, data);
