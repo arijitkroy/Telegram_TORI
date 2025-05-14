@@ -13,7 +13,7 @@ function escapeMarkdown(text) {
     return text.replace(/[_*[\]()~`>#+\-=|{}.!]/g, '\\$&');
 }
 
-async function memeCommand(chatId, args, sendMessage) {
+async function meme(chatId, args, sendMessage) {
     const sub_reddit = args.replace('/meme', '').trim();
     const url = sub_reddit 
         ? `https://meme-api.com/gimme/${sub_reddit}` 
@@ -58,5 +58,5 @@ async function memeCommand(chatId, args, sendMessage) {
     }
 }
 
-memeCommand.syntax = '/meme [subreddit] - Fetches a random meme from random subreddit if not provided';
-export default memeCommand;
+meme.syntax = '/meme [subreddit] - Fetches a random meme from random subreddit if not provided';
+export default meme;

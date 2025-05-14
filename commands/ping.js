@@ -1,6 +1,6 @@
-async function pingCommand(chatId, text, sendMessage) {
+async function ping(chatId, text, sendMessage) {
     await sendMessage(chatId, "Pong!");
 }
 
-pingCommand.syntax = '/ping - Replies with Pong!';
-export default pingCommand;
+ping.syntax = '/ping - Replies with Pong!';
+export default ping;

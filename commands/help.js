@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-async function helpCommand(chatId, args, sendMessage) {
+async function help(chatId, args, sendMessage) {
     const commandsPath = path.join(__dirname);
     const files = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js') && file !== 'help.js');
 
@@ -23,5 +23,5 @@ async function helpCommand(chatId, args, sendMessage) {
     await sendMessage(chatId, helpText);
 }
 
-helpCommand.syntax = '/help - Show this help message';
-export default helpCommand;
+help.syntax = '/help - Show this help message';
+export default help;

@@ -3,8 +3,11 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import handleGemini from "../common/handleGemini.js";
 import {
+    isGeminiActive,
     isAwaitingTorrent,
-    clearUserState
+    clearUserState,
+    registerUser,
+    getChatPartner
 } from "../common/memory.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -52,6 +55,19 @@ export default async function handler(chatId, text, sendMessage, callbackData = 
             return;
         }
 
+        if (text) {
+            const username = text.startsWith("/") ? null : update?.message?.from?.username;
+            if (username) {
+                registerUser(username, chatId);
+            }
+
+            const partnerId = getChatPartner(chatId);
+            if (partnerId) {
+                await sendMessage(partnerId, `💬 ${username || 'Anonymous'}: ${text}`);
+                return;
+            }
+        }
+
         const trimmedText = text.trim();
         const [command] = trimmedText.split(' ');
         const commandHandler = commands[command];
@@ -60,7 +76,7 @@ export default async function handler(chatId, text, sendMessage, callbackData = 
             await commandHandler(chatId, text, sendMessage);
         } else if (trimmedText.startsWith('/')) {
             await sendMessage(chatId, '❓ Unknown command. Use /help.');
-        } else {
+        } else if (isGeminiActive(chatId)) {
             await handleGemini(chatId, text, sendMessage);
         }
     } catch (err) {
