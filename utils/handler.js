@@ -2,10 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import handleGemini from "../common/handleGemini.js";
-import {
-    isGeminiActive,
-    isAwaitingTorrent    
-} from "../common/memory.js";
+import { isGeminiActive } from "../common/memory.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
