@@ -92,7 +92,7 @@ function clearConversation(chatId) {
 export {
     startGeminiSession,
     endGeminiSession,
-    activeGeminiUsers,
+    isGeminiActive,
     registerUser,
     getChatIdByUsername,
     createChatBridge,
