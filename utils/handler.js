@@ -26,7 +26,7 @@ export async function initCommands() {
     }
 }
 
-export default async function handler(chatId, text, sendMessage, callbackData = null, document = null) {
+export default async function handler(chatId, text, sendMessage, callbackData = null, document = null, username = null) {
     try {
         if (callbackData) {
             for (const [_, commandHandler] of Object.entries(commands)) {
@@ -56,8 +56,7 @@ export default async function handler(chatId, text, sendMessage, callbackData = 
         }
 
         if (text) {
-            const username = text.startsWith("/") ? null : update?.message?.from?.username;
-            if (username) {
+            if (username && !text.startsWith("/")) {
                 registerUser(username, chatId);
             }
 

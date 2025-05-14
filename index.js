@@ -27,12 +27,13 @@ app.post(`/webhook/${TOKEN}`, async (req, res) => {
         const chatId = update.message.chat.id;
         const text = update.message.text || "";
         const document = update.message.document || null;
-        await handler(chatId, text, sendMessage, null, document);
+        const username = update.message.from?.username || null;
+        await handler(chatId, text, sendMessage, null, document, username);
     }
     else if (update.callback_query) {
         const chatId = update.callback_query.message.chat.id;
         const data = update.callback_query.data;
-        await handler(chatId, null, sendMessage, data, null);
+        await handler(chatId, null, sendMessage, data);
         return res.sendStatus(200);
     }
 
