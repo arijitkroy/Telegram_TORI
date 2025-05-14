@@ -5,9 +5,7 @@ import handleGemini from "../common/handleGemini.js";
 import {
     isGeminiActive,
     isAwaitingTorrent,
-    clearUserState,
-    registerUser,
-    getChatPartner
+    clearUserState
 } from "../common/memory.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -26,7 +24,7 @@ export async function initCommands() {
     }
 }
 
-export default async function handler(chatId, text, sendMessage, callbackData = null, document = null, username = null) {
+export default async function handler(chatId, text, sendMessage, callbackData = null) {
     try {
         if (callbackData) {
             for (const [_, commandHandler] of Object.entries(commands)) {
@@ -37,34 +35,6 @@ export default async function handler(chatId, text, sendMessage, callbackData = 
             }
             await sendMessage(chatId, "⚠️ Action not supported.");
             return;
-        }
-
-        if (document && isAwaitingTorrent(chatId)) {
-            const cmd = commands["/torrent"];
-            if (cmd) {
-                clearUserState(chatId);
-                if (typeof cmd.handleDocument === "function") {
-                    await cmd.handleDocument(chatId, "", sendMessage, null, document);
-                }
-                else if (cmd.file === true) {
-                    await cmd(chatId, "", sendMessage, null, document);
-                }
-            } else {
-                await sendMessage(chatId, "⚠️ Upload not supported at the moment.");
-            }
-            return;
-        }
-
-        if (text) {
-            if (username && !text.startsWith("/")) {
-                registerUser(username, chatId);
-            }
-
-            const partnerId = getChatPartner(chatId);
-            if (partnerId) {
-                await sendMessage(partnerId, `💬 ${username || 'Anonymous'}: ${text}`);
-                return;
-            }
         }
 
         const trimmedText = text.trim();

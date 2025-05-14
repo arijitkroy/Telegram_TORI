@@ -26,9 +26,7 @@ app.post(`/webhook/${TOKEN}`, async (req, res) => {
     if (update.message) {
         const chatId = update.message.chat.id;
         const text = update.message.text || "";
-        const document = update.message.document || null;
-        const username = update.message.from?.username || null;
-        await handler(chatId, text, sendMessage, null, document, username);
+        await handler(chatId, text, sendMessage);
     }
     else if (update.callback_query) {
         const chatId = update.callback_query.message.chat.id;
