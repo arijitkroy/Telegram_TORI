@@ -19,7 +19,6 @@ async function help(chatId, args, sendMessage) {
         helpText += `• ${syntax}\n`;
     }
 
-    helpText += '\nNote: You can chat normally without using /\nHave fun ;)\n';
     await sendMessage(chatId, helpText);
 }
 
